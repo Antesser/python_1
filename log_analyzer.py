@@ -20,9 +20,9 @@ from collections import defaultdict, namedtuple
 from enum import Enum
 from pathlib import Path
 from statistics import median
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
 
-config = {
+config: Dict[str, Any] = {
     "REPORT_SIZE": 1000,
     "REPORT_DIR": "./reports",
     "LOG_DIR": "./log",
@@ -254,6 +254,7 @@ def report_date(date: datetime.date) -> str:
 def report_already_exists(report_path: Path, date: datetime.date) -> bool:
     if not report_path.is_dir():
         raise ValueError(f"incorrect report dir: '{report_path}'")
+
     return report_path.joinpath(report_date(date)).is_file()
 
 

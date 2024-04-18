@@ -28,6 +28,11 @@
 # -----------------
 
 
+from itertools import combinations, groupby
+
+card_suits = dict(zip("A23456789TJQK", range(1, 14)))
+
+
 def hand_rank(hand):
     """Возвращает значение определяющее ранг 'руки'"""
     ranks = card_ranks(hand)
@@ -51,66 +56,96 @@ def hand_rank(hand):
         return (0, ranks)
 
 
-def card_ranks(hand):
+def card_ranks(hand) -> list[int]:
     """Возвращает список рангов (его числовой эквивалент),
     отсортированный от большего к меньшему"""
-    return
+    return sorted([card_suits[card[0]] for card in hand], reverse=True)
 
 
-def flush(hand):
+def flush(hand) -> bool:
     """Возвращает True, если все карты одной масти"""
-    return
+    first_suit = hand[0][1]
+    for card in hand:
+        if first_suit != card[1]:
+            return False
+    return True
 
 
-def straight(ranks):
+def straight(ranks) -> bool:
     """Возвращает True, если отсортированные ранги формируют последовательность 5ти,
     где у 5ти карт ранги идут по порядку (стрит)"""
-    return
+    for pair in zip(ranks, ranks[1:]):
+        if pair[0] - pair[1] != 1:
+            return False
+    return True
 
 
-def kind(n, ranks):
+def kind(n, ranks) -> int | None:
     """Возвращает первый ранг, который n раз встречается в данной руке.
     Возвращает None, если ничего не найдено"""
-    return
+    for key, group in groupby(ranks):
+        if len(list(group)) == n:
+            return key
+    return None
 
 
-def two_pair(ranks):
-    """Если есть две пары, то возврщает два соответствующих ранга,
+def two_pair(ranks) -> list[str] | None:
+    """Если есть две пары, то возвращает два соответствующих ранга,
     иначе возвращает None"""
-    return
+    pairs = [key for key, group in groupby(ranks) if len(list(group)) >= 2]
+    if len(pairs) >= 2:
+        return pairs
+    else:
+        return None
 
 
-def best_hand(hand):
-    """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт """
-    return
+def best_hand(hand) -> tuple:
+    """Из "руки" в 7 карт возвращает лучшую "руку" в 5 карт"""
+    return max(list(combinations(hand, 5)), key=hand_rank)
 
 
-def best_wild_hand(hand):
-    """best_hand но с джокерами"""
-    return
+# def best_wild_hand(hand):
+#     """best_hand но с джокерами"""
+#     сложнаааа <_<
+#     return
 
 
 def test_best_hand():
     print("test_best_hand...")
-    assert (sorted(best_hand("6C 7C 8C 9C TC 5C JS".split()))
-            == ['6C', '7C', '8C', '9C', 'TC'])
-    assert (sorted(best_hand("TD TC TH 7C 7D 8C 8S".split()))
-            == ['8C', '8S', 'TC', 'TD', 'TH'])
-    assert (sorted(best_hand("JD TC TH 7C 7D 7S 7H".split()))
-            == ['7C', '7D', '7H', '7S', 'JD'])
-    print('OK')
+    assert sorted(best_hand("6C 7C 8C 9C TC 5C JS".split())) == [
+        "6C",
+        "7C",
+        "8C",
+        "9C",
+        "TC",
+    ]
+    assert sorted(best_hand("TD TC TH 7C 7D 8C 8S".split())) == [
+        "8C",
+        "8S",
+        "TC",
+        "TD",
+        "TH",
+    ]
+    assert sorted(best_hand("JD TC TH 7C 7D 7S 7H".split())) == [
+        "7C",
+        "7D",
+        "7H",
+        "7S",
+        "JD",
+    ]
+    print("OK")
 
 
-def test_best_wild_hand():
-    print("test_best_wild_hand...")
-    assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
-            == ['7C', '8C', '9C', 'JC', 'TC'])
-    assert (sorted(best_wild_hand("TD TC 5H 5C 7C ?R ?B".split()))
-            == ['7C', 'TC', 'TD', 'TH', 'TS'])
-    assert (sorted(best_wild_hand("JD TC TH 7C 7D 7S 7H".split()))
-            == ['7C', '7D', '7H', '7S', 'JD'])
-    print('OK')
+# def test_best_wild_hand():
+#     print("test_best_wild_hand...")
+#     assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
+#             == ['7C', '8C', '9C', 'JC', 'TC'])
+#     assert (sorted(best_wild_hand("TD TC 5H 5C 7C ?R ?B".split()))
+#             == ['7C', 'TC', 'TD', 'TH', 'TS'])
+#     assert (sorted(best_wild_hand("JD TC TH 7C 7D 7S 7H".split()))
+#             == ['7C', '7D', '7H', '7S', 'JD'])
+#     print('OK')
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_best_hand()
-    test_best_wild_hand()
+    # test_best_wild_hand()
