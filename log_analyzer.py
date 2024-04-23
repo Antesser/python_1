@@ -274,7 +274,7 @@ def parse_config(config_text: str) -> Dict[str, str]:
     return file_config
 
 
-def config_setup(config: Dict) -> None:
+def config_setup(config: Dict[str, Any]) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
@@ -301,7 +301,7 @@ def config_setup(config: Dict) -> None:
     config.update(**file_config)
 
 
-def main(config: Dict) -> None:
+def main(config: Dict[str, Any]) -> None:
     config_setup(config)
 
     report_path = Path(config.get("REPORT_DIR"))
