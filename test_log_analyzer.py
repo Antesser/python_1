@@ -9,50 +9,77 @@ from pathlib import Path
 import log_analyzer
 
 
-class Test_config_parsing(unittest.TestCase):
-    sample_path = "./tests/"
-    test_file_name = ["nginx-access-ui.log-20180630"]
+class TestConfigParsing(unittest.TestCase):
+    sample_path: str = "./tests/"
+    test_file_name: list[str] = ["nginx-access-ui.log-20180630"]
 
-    def test_config_parsing_bad_path(self):
-        test_path = "gibberish"
+    def test_config_parsing_bad_path(self) -> None:
+        test_path: str = "gibberish"
         with self.assertRaises(ValueError):
-            log_analyzer.get_last_logfile_info(test_path)
+            log_analyzer.get_last_logfile_inf(test_path)
 
-    def test_report_existence_check_bad_path(self):
+    def test_report_existence_check_bad_path(self) -> None:
         test_path = Path("/wrong/path")
         date = dt.date(2024, 4, 11)
         with self.assertRaises(ValueError):
             log_analyzer.report_already_exists(test_path, date)
 
-    def test_log_file_existence_check_from_sample(self):
-        full_path = log_analyzer.select_last_logfile(self.test_file_name)
+    def test_log_file_existence_check_from_sample(self) -> None:
+        full_path: log_analyzer.LogfileInf = log_analyzer.select_last_logfile(
+            self.test_file_name
+        )
         self.assertEqual(full_path.path, "nginx-access-ui.log-20180630")
 
-    # def test_config_parsing_good_path(self):
-    #     test_good_path = "./app.cfg.example"
-    #     json_data = log_analyzer.config_parsing(test_good_path)
-    #     self.assertIn("REPORT_SIZE", json_data)
-    #     self.assertIn("ERROR_LIMIT_PERC", json_data)
-    #     self.assertIn("REPORT_DIR", json_data)
-    #     self.assertIn("URL_LOG_DIR", json_data)
-    #     self.assertIn("CONFIG_FILE_FULL_PATH", json_data)
-    #     self.assertIn("LOG_FILE_FULL_PATH", json_data)
 
-    # def test_log_file_parsing_and_get_top_from_sample(self):
-    #     full_path = log_analyzer.log_file_existence_check(self.sample_path)
-    #     urls, urls_count, urls_total_time, error_perc = log_analyzer.log_file_parsing(
-    #         full_path
-    #     )
-    #     report_size = 10
-    #     _top = log_analyzer.get_top_requests(
-    #         urls, urls_count, urls_total_time, report_size
-    #     )
-    #     result_list = [i[1] for i in _top.items()]
-    #     self.assertIsNotNone(urls["7e0f54c1ef851fb3"])
-    #     self.assertEqual(urls_count, 100)
-    #     self.assertEqual(urls_total_time, 25.840999999999994)
-    #     self.assertEqual(error_perc, 0.00)
-    #     self.assertEqual(result_list[0]["time_max"], 5.246)
+class BaseLogAnalyzerTestCase(unittest.TestCase):
+    @classmethod
+    def setup(cls) -> None:
+        cls.config = {
+            "REPORT_SIZE": 1000,
+            "REPORT_DIR": "./test/reports",
+            "LOG_DIR": "./test/log",
+        }
+
+
+class ParseLogfileTest(BaseLogAnalyzerTestCase):
+    def setUp(self) -> None:
+        self.correct_line: str = (
+            "1.196.116.32 -  - [02/Nov/2022:03:50:22 +0300] "
+            '"GET /api/v2/banner/25019354 HTTP/1.1" 200 927 "-" '
+            '"Lynx/2.8.8dev.9 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.10.5" '
+            '"-" "1496327422-2190076493-4743-9819059" "dc7161bv4" 0.390\n'
+        )
+        self.info_expected = log_analyzer.LogfileLineInfo(
+            remote_addr="1.196.116.32",
+            remote_user="-",
+            http_x_real_ip="-",
+            time_local="02/Nov/2022:03:50:22 +0300",
+            request="GET /api/v2/banner/25019354 HTTP/1.1",
+            URL="/api/v2/banner/25019354",
+            status=200,
+            body_bytes_sent=927,
+            http_referer="-",
+            http_user_agent="Lynx/2.8.8dev.9 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.10.5",
+            http_x_forwarded_for="-",
+            http_X_REQUEST_ID="1496327422-2190076493-4743-9819059",
+            http_X_RB_USER="dc7161bv4",
+            request_time=0.390,
+        )
+        self.wrong: str = (
+            "1.196.117.32 -  - [29/Jun/2019:03:50:22 +0300] "
+            '"GET /api/v2/banner/25019354 HTTP/1.1" 200 927 "-" '
+            '"Lynx/2.8.8dev.9 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.10.5"'
+            '"1498697422-23566854564-4743-9752759" "dc7161bv4"'
+        )
+
+    def test_parse_correct(self) -> None:
+        info = log_analyzer.parse_logfile_line(self.correct_line)
+        self.assertIsInstance(info, log_analyzer.LogfileLineInfo)
+        self.assertEqual(info, self.info_expected)
+
+    def test_parse_wrong(self) -> None:
+        with self.assertRaises(expected_exception=ValueError):
+            log_analyzer.parse_logfile_line(self.wrong)
 
 
 if __name__ == "__main__":
