@@ -48,8 +48,8 @@ class LogfileType(Enum):
 LogfileInf = namedtuple("LogfileInf", ["path", "date", "type"])
 
 
-LogfileLineInfo = namedtuple(
-    "LogfileLineInfo",
+LogfileLineInf = namedtuple(
+    "LogfileLineInf",
     [
         "remote_addr",
         "remote_user",
@@ -152,11 +152,11 @@ def select_last_logfile(files: List[str]) -> Optional[LogfileInf]:
     return
 
 
-def parse_logfile_line(line: str) -> LogfileLineInfo:
+def parse_logfile_line(line: str) -> LogfileLineInf:
     m: re.Match[str] | None = re.match(logfile_line_patter_obj, line)
     if m is None:
         raise ValueError("incorrect line structure")
-    info: LogfileLineInfo = LogfileLineInfo._make(m.group(*range(1, 15)))
+    info: LogfileLineInf = LogfileLineInf._make(m.group(*range(1, 15)))
     info = info._replace(
         status=int(info.status),
         body_bytes_sent=int(info.body_bytes_sent),
@@ -167,8 +167,8 @@ def parse_logfile_line(line: str) -> LogfileLineInfo:
 
 def parse_logfile(
     logfile_inf: LogfileInf,
-    logfile_line_parser: Callable[[str], LogfileLineInfo] = parse_logfile_line,
-) -> Iterator[Optional[LogfileLineInfo]]:
+    logfile_line_parser: Callable[[str], LogfileLineInf] = parse_logfile_line,
+) -> Iterator[Optional[LogfileLineInf]]:
     if not os.path.isfile(logfile_inf.path):
         raise ValueError(f"incorrect logfile path: '{logfile_inf.path}'")
 
@@ -188,7 +188,7 @@ def parse_logfile(
 
 def get_logfile_stats(
     logfile_inf: LogfileInf,
-    logfile_parser: Callable[[LogfileInf], Iterator[Optional[LogfileLineInfo]]],
+    logfile_parser: Callable[[LogfileInf], Iterator[Optional[LogfileLineInf]]],
     result_size: int,
 ) -> List[URLStats]:
     stats = dict()
@@ -196,7 +196,7 @@ def get_logfile_stats(
     err_lines = 0
     summary_time = 0.0
     req_times = defaultdict(list)
-    
+
     for inf in logfile_parser(logfile_inf):
         total_lines += 1
         if inf is None:

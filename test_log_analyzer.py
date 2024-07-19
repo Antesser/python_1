@@ -49,7 +49,7 @@ class ParseLogfileTest(BaseLogAnalyzerTestCase):
             '"Lynx/2.8.8dev.9 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/2.10.5" '
             '"-" "1496327422-2190076493-4743-9819059" "dc7161bv4" 0.390\n'
         )
-        self.info_expected = log_analyzer.LogfileLineInfo(
+        self.info_expected = log_analyzer.LogfileLineInf(
             remote_addr="1.196.116.32",
             remote_user="-",
             http_x_real_ip="-",
@@ -74,7 +74,7 @@ class ParseLogfileTest(BaseLogAnalyzerTestCase):
 
     def test_parse_correct(self) -> None:
         info = log_analyzer.parse_logfile_line(self.correct_line)
-        self.assertIsInstance(info, log_analyzer.LogfileLineInfo)
+        self.assertIsInstance(info, log_analyzer.LogfileLineInf)
         self.assertEqual(info, self.info_expected)
 
     def test_parse_wrong(self) -> None:
